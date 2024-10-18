@@ -12,8 +12,14 @@ app.use(
 
 export default async function handler(req, res) {
   const { method, url } = req;
+  console.log(`Received ${method} request for: ${url}`);
 
   // Login route
+  if (!username || !password) {
+    return res
+      .status(400)
+      .json({ message: 'Username and password are required' });
+  }
   if (url === '/api/login' && method === 'POST') {
     const { username, password } = req.body;
     console.log(username, password);
