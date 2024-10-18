@@ -10,6 +10,7 @@ const prisma = new PrismaClient();
 const PORT = 3000;
 
 // const SECRET_KEY = process.env.SECRET_KEY;
+app.use(express.static(path.join(__dirname, '../frontend/build')
 
 app.use(cookieParser());
 app.use(express.json());
