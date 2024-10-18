@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 app.use(
   cors({
     origin: 'https://gis-gizi.vercel.app', // Domain frontend setelah deployment
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
   })
 );
