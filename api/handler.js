@@ -12,10 +12,9 @@ app.use(
 
 export default async function handler(req, res) {
   const { method, url } = req;
-  const baseUrl = 'https://gis-gizi-be.vercel.app';
 
   // Login route
-  if (url === `${baseUrl}/api/login` && method === 'POST') {
+  if (url === '/api/login' && method === 'POST') {
     const { username, password } = req.body;
     console.log(username, password);
 
