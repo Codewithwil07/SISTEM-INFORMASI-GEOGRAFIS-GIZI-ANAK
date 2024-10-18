@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = "mysql://root:root@localhost:3306/gis_gizi"
+}
+
+model Gizi {
+  id                              Int      @id @default(autoincrement())
+  kecamatan                       String
+  puskesmas                       String
+  jumlah_balita_ditimbang         Int
+  bb_u_kurang                     Int
+  persen_bb_u_kurang              Float
+  jumlah_balita_diukur_tinggi_badan Int
+  tb_u_pendek                     Int
+  persen_tb_u_pendek              Float
+  jumlah_balita_diukur_bb_tb      Int
+  bb_tb_gizi_kurang               Int
+  persen_gizi_kurang              Float
+  bb_tb_gizi_buruk                Int
+  persen_gizi_buruk               Float
+  laporan_tanggal                 DateTime @default(now()) // Atau DateTime? jika tanpa default
+}
+
+
+model user {
+  id_user  Int    @id @default(autoincrement())
+  username String @db.VarChar(32)
+  password String @db.VarChar(32)
+}
