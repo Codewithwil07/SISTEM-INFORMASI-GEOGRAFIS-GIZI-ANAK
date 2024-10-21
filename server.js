@@ -24,9 +24,6 @@ app.use(
 
 const basicAuth = (req, res, next) => {
   const { username, password } = req.body;
-
-  console.log(username, password);
-
   if (username === 'admin' && password === 'admin') {
     next();
   } else {
@@ -37,15 +34,15 @@ const basicAuth = (req, res, next) => {
 // **LOGIN** - Login user
 app.post('/api/login', basicAuth, async (req, res) => {
   try {
-    res.status(200).send({ msg: 'Login successful' });
+    res.status(200).json({ msg: 'Login Sucesfully' });
   } catch (error) {
     console.error(error.message);
-    return res.status(500).send({ msg: 'Server error' });
+    return res.status(500).json({ msg: 'Server error' });
   }
 });
 
 // **CREATE** - meembuat data baru
-app.post('/api/data/laporan-gizi', async (req, res) => {
+app.post('/api/laporan-gizi', async (req, res) => {
   const {
     kecamatan,
     puskesmas,
@@ -101,9 +98,10 @@ app.post('/api/data/laporan-gizi', async (req, res) => {
       },
     });
 
-    res
-      .status(201)
-      .json({ message: 'Data created successfully', data: newLaporan });
+    if (!newLaporan)
+      return res.status(401).send({ msg: 'Gagal Menambah Laporan' });
+
+    res.status(201).json(newLaporan);
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ message: 'Error creating data' });
@@ -111,14 +109,27 @@ app.post('/api/data/laporan-gizi', async (req, res) => {
 });
 
 // **READ** - Mengambil semua data laporan gizi
-app.get('/api/data/laporan-gizi', async (req, res) => {
+// **READ** - Mengambil semua data laporan gizi
+app.get('/api/laporan-gizi', async (req, res) => {
   try {
-    const data = await prisma.gizi.findMany();
+    const dataStart = await prisma.gizi.findMany();
 
-    // Check if the data array is empty
-    if (data.length === 0) {
+    // Cek apakah data ada
+    if (dataStart.length === 0) {
       return res.status(404).json({ message: 'Data not found' });
     }
+
+    // Format tanggal untuk setiap item
+    const data = dataStart.map((d) => {
+      const date = new Date(d.laporan_tanggal);
+      const formattedDate = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+      return { ...d, laporan_tanggal: formattedDate };
+    });
+
+    console.log(data);
 
     // Respond with data
     res.status(200).json(data);
@@ -129,7 +140,7 @@ app.get('/api/data/laporan-gizi', async (req, res) => {
 });
 
 // **READ by ID** - Mengambil data laporan gizi berdasarkan ID
-app.get('/api/data/laporan-gizi/:id', async (req, res) => {
+app.get('/api/laporan-gizi/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const data = await prisma.gizi.findUnique({
@@ -147,7 +158,7 @@ app.get('/api/data/laporan-gizi/:id', async (req, res) => {
 });
 
 // **UPDATE** - Mengupdate data laporan gizi berdasarkan ID
-app.put('/api/data/laporan-gizi/:id', async (req, res) => {
+app.put('/api/laporan-gizi/:id', async (req, res) => {
   const { id } = req.params;
 
   const {
@@ -164,8 +175,25 @@ app.put('/api/data/laporan-gizi/:id', async (req, res) => {
     persen_gizi_kurang,
     bb_tb_gizi_buruk,
     persen_gizi_buruk,
-    laporan_tanggal,
   } = req.body;
+
+  if (
+    !kecamatan ||
+    !puskesmas ||
+    !jumlah_balita_ditimbang ||
+    !bb_u_kurang ||
+    !persen_bb_u_kurang ||
+    !jumlah_balita_diukur_tinggi_badan ||
+    !tb_u_pendek ||
+    !persen_tb_u_pendek ||
+    !jumlah_balita_diukur_bb_tb ||
+    !bb_tb_gizi_kurang ||
+    !persen_gizi_kurang ||
+    !bb_tb_gizi_buruk ||
+    !persen_gizi_buruk
+  ) {
+    return res.status(400).send('Form tidak boleh kosong!');
+  }
 
   try {
     const updatedLaporan = await prisma.gizi.update({
@@ -188,9 +216,10 @@ app.put('/api/data/laporan-gizi/:id', async (req, res) => {
         laporan_tanggal: new Date(),
       },
     });
-    res
-      .status(200)
-      .json({ message: 'Data updated successfully', data: updatedLaporan });
+
+    if (!updatedLaporan)
+      return res.status(400).json({ message: 'Laporan Gagal' });
+    res.status(200).json(updatedLaporan);
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ message: 'Error updating data' });
@@ -198,18 +227,21 @@ app.put('/api/data/laporan-gizi/:id', async (req, res) => {
 });
 
 // **DELETE** - Menghapus data laporan gizi berdasarkan ID
-app.delete('/api/data/laporan-gizi/:id', async (req, res) => {
+app.delete('/api/laporan-gizi/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const deletedLaporan = await prisma.gizi.delete({
       where: { id: parseInt(id) },
     });
-    res
-      .status(200)
-      .json({ message: 'Data deleted successfully', data: deletedLaporan });
+
+    if (!deletedLaporan) {
+      res.status(401).json({ message: 'Error deleting data' });
+    }
+
+    res.status(200).json(id);
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ message: 'Error deleting data' });
+    res.status(500).json({ message: 'Internal Server error' });
   }
 });
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
